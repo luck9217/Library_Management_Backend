@@ -1,11 +1,7 @@
 import { startServer } from "./server";
 import { AppDataSource } from "./config/typeorm";
-import { sendEmail } from "./config/email/mail.config";
-
-import { Template } from "./config/email/mail.config";
-
-import nodemailer from "nodemailer";
-import { environment } from "../src/config/environment";
+import userRoutes from "./routers/user.routes";
+import express from "express";
 
 async function main() {
   //database on postgres
@@ -17,13 +13,19 @@ async function main() {
   //Localhost
   app.listen(port);
   console.log("App running on port", port);
+  //Set static page
+  app.use(express.static("./public"));
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: false }));
+  //Routers
+  app.use(userRoutes);
+  console.log("Router running");
 
-  const bodyTemplate= Template("Lucas","aca va token");
+  app.get('/',(req,res)=>{
+    res.redirect("https://www.google.com")
+  })
 
-  await sendEmail("vaheh86213@weepm.com","Test template",bodyTemplate);
- 
-
-  console.log("FIN");
+  console.log("END");
 }
 
 main();

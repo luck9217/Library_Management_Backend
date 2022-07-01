@@ -11,7 +11,11 @@ import {
   Resolver,
 } from "type-graphql";
 import { User } from "../entity/user.entity";
+import { UserTemp } from "../entity/userTemp.entity";
 import { verify } from "jsonwebtoken";
+import { uuid } from "uuidv4";
+import { sendEmail } from "../config/email/mail.config";
+import { getTemplate } from "../config/email/mail.config";
 
 @InputType()
 class UserInput {
@@ -48,6 +52,58 @@ class LoginResponse {
 
 @Resolver()
 export class AuthResolver {
+  /////////////////////// PRE-REGISTER MUTATION ////////////////////////////
+  @Mutation(() => String)
+  async preRegister(@Arg("input", () => UserInput) input: UserInput) {
+    try {
+      const { fullName, email, password } = input;
+
+      //Check email on database User
+      const userExists = await User.findOne({ where: { email } });
+
+      if (userExists) {
+        const error = new Error();
+        error.message = "Email is not available";
+        throw error;
+      }
+
+      const hashedPassword = await hash(password, 10);
+
+      //Insert on temp table
+      const newUser = await UserTemp.insert({
+        fullName,
+        email,
+        password: hashedPassword,
+        code: uuid(),
+      });
+
+      //Finding recently email request
+      const result = await UserTemp.findOneBy({
+        id: newUser.identifiers[0].id,
+      });
+      if (!result) throw new Error("Error");
+      console.log(result);
+
+      const resultResponde = "Sending email to confirmation";
+      console.log(resultResponde);
+
+      //token creator
+      const jwt: string = sign(
+        { code: result.code, email: result.email },
+        environment.JWT_SECRET
+      );
+      console.log(jwt);
+
+      //Sending Email
+      const bodyTemplate = getTemplate(result.fullName, jwt);
+
+      await sendEmail(result.email, "Confirm Your Account", bodyTemplate);
+
+      return resultResponde;
+    } catch (error: any) {
+      throw new Error(error);
+    }
+  }
   /////////////////////// REGISTER MUTATION ////////////////////////////
   @Mutation(() => User)
   async register(@Arg("input", () => UserInput) input: UserInput) {

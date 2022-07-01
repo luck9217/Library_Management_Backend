@@ -4,14 +4,13 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   BaseEntity,
-  OneToMany,
 } from "typeorm";
-import { Book } from "./book.entity";
+
 import { Field, ObjectType } from "type-graphql";
 
 @ObjectType()
 @Entity()
-export class User extends BaseEntity {
+export class UserTemp extends BaseEntity {
   @Field()
   @PrimaryGeneratedColumn()
   id!: number;
@@ -28,18 +27,15 @@ export class User extends BaseEntity {
   @Column()
   password!: string;
 
-  @Field(() => [Book], { nullable: true })
-  @OneToMany(() => Book, (book) => book.author, {
-    nullable: true,
-    onDelete: "CASCADE",
-  })
-  books!: Book[];
-
   @Field()
   @Column()
-  bookLoan!: boolean;
+  code!: string;
 
   @Field()
   @CreateDateColumn({ type: "timestamp" })
-  createdAt!: string;
+  inicialDate!: string;
+
+  @Field()
+  @CreateDateColumn({ type: "timestamp" })
+  finalDate!: string;
 }

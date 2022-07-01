@@ -117,8 +117,8 @@
 }
 
 #email___content img {
-    width: 6rem;
-    height: 6rem;
+    width: auto;
+    height: 20%;
     margin-top: 1rem;
     margin-bottom: 1rem;
 }
