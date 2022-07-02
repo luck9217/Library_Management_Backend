@@ -14,8 +14,8 @@ import { User } from "../entity/user.entity";
 import { UserTemp } from "../entity/userTemp.entity";
 import { verify } from "jsonwebtoken";
 import { uuid } from "uuidv4";
-import { sendEmail } from "../config/email/mail.config";
-import { getTemplate } from "../config/email/mail.config";
+import { getTemplatePassNew, sendEmail } from "../config/email/mail.config";
+import { getTemplateConfirm } from "../config/email/mail.config";
 
 @InputType()
 class UserInput {
@@ -95,7 +95,7 @@ export class AuthResolver {
       console.log(jwt);
 
       //Sending Email
-      const bodyTemplate = getTemplate(result.fullName, jwt);
+      const bodyTemplate = getTemplateConfirm(result.fullName, jwt);
 
       await sendEmail(result.email, "Confirm Your Account", bodyTemplate);
 
@@ -104,6 +104,45 @@ export class AuthResolver {
       throw new Error(error);
     }
   }
+
+  //////////// QUERY REQUEST NEW PASSWORD ////////////
+
+  @Mutation(() => String)
+  async newPassUser(@Arg("input", () => LoginInput) input: LoginInput) {
+    try {
+      const { email, password } = input;
+
+      //Check email on database User
+      const userExists = await User.findOne({ where: { email: email } });
+
+      if (!userExists) {
+        const error = new Error();
+        error.message = "Email is not founded";
+        throw error;
+      }
+
+      const hashedPassword = await hash(password, 10);
+
+      const resultResponde = "Sending email to confirmation";
+      console.log(resultResponde);
+
+      //token creator
+      const jwt: string = sign(
+        { code: hashedPassword, email: userExists.email },
+        environment.JWT_SECRET
+      );
+
+      //Sending Email
+      const bodyTemplate = getTemplatePassNew(userExists.fullName, jwt);
+
+      await sendEmail(userExists.email, "Change Password", bodyTemplate);
+
+      return resultResponde;
+    } catch (error: any) {
+      throw new Error(error);
+    }
+  }
+
   /////////////////////// REGISTER MUTATION ////////////////////////////
   @Mutation(() => User)
   async register(@Arg("input", () => UserInput) input: UserInput) {

@@ -15,15 +15,10 @@ async function main() {
   console.log("App running on port", port);
   //Set static page
   app.use(express.static("./public"));
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: false }));
+
   //Routers
   app.use(userRoutes);
   console.log("Router running");
-
-  app.get('/',(req,res)=>{
-    res.redirect("https://www.google.com")
-  })
 
   console.log("END");
 }
