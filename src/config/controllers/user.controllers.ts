@@ -4,6 +4,8 @@ import { UserTemp } from "../../entity/userTemp.entity";
 import { User } from "../../entity/user.entity";
 import { environment } from "../environment";
 
+///////////REGISTER USER AFTER RECEIVE EMAIL CONFIRMATION/////////////////////
+
 //Query create new user
 export const getUserToken = async (req: Request, res: Response) => {
   try {
@@ -30,7 +32,31 @@ export const getUserToken = async (req: Request, res: Response) => {
       return res.redirect("/error.html");
     }
 
-    console.log("usario a insertar ", userExists);
+    //Compare send hours if more than 1 hour is rejected
+
+    const date1: any = new Date();
+    const date2: any = new Date(userExists.inicialDate);
+
+    const hours = Math.abs(date1 - date2) / 36e5;
+
+    if (hours > 1) {
+      return res.redirect("/error.html");
+    }
+
+    //Insert on User table
+    const newUser = await User.insert({
+      fullName: userExists.fullName,
+      email: userExists.email,
+      password: userExists.password,
+      bookLoan: false,
+    });
+
+    //Finding recently email request
+    const result = await User.findOneBy({
+      id: newUser.identifiers[0].id,
+    });
+    if (!result) throw new Error("Error");
+    console.log(result);
 
     // Redirect to confirm web
     res.redirect("/confirm.html");
