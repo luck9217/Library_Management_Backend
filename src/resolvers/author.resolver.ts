@@ -1,12 +1,22 @@
 import { IsString, Length } from "class-validator";
-import { Arg, Field, InputType, Resolver, Mutation, Query } from "type-graphql";
+import {
+  Arg,
+  Field,
+  InputType,
+  Resolver,
+  Mutation,
+  Query,
+  UseMiddleware,
+  Ctx,
+} from "type-graphql";
 import { MoreThan } from "typeorm";
 import { Author } from "../entity/author.entity";
+import { isAuth, TContext } from "../middlewares/auth.middleware";
 
 @InputType()
 class AuthorInput {
   @Field()
-  @Length(3,64)
+  @Length(3, 64)
   @IsString()
   fullName!: string;
 }
@@ -23,7 +33,7 @@ class AuthorUpdateInput {
   id!: number;
 
   @Field()
-  @Length(3,12)
+  @Length(3, 12)
   fullName?: string;
 }
 
@@ -65,14 +75,18 @@ export class AuthorResolver {
   }
 
   @Query(() => [Author])
-  async GetAllAuthor(): Promise<Author[]> {
-    const result= await Author.find({relations:['books']});
+  @UseMiddleware(isAuth)
+  async GetAllAuthor(@Ctx() context: TContext): Promise<Author[]> {
+    try {
+      const result = await Author.find({ relations: ["books"] });
 
-    console.log(result);
+      console.log(result);
 
-    return result;
+      return result;
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
   }
-
   @Query(() => [Author]) // @Field on entity to traslate to field query // [] with bracket i especified an array like response
   async GetIdAuthor(
     @Arg("input", () => AuthorIdInput) input: AuthorIdInput

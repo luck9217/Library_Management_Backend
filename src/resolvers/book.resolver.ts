@@ -9,6 +9,7 @@ import {
   Resolver,
   UseMiddleware,
 } from "type-graphql";
+import { addDaysToDate } from "../config/dateConvert/dateConvert";
 import { environment } from "../config/environment";
 import { Author } from "../entity/author.entity";
 import { Book } from "../entity/book.entity";
@@ -134,10 +135,11 @@ export class BookResolver {
       }
 
       const dataUserLog: any = context.payload;
+      console.log("The user log is ", dataUserLog.id);
 
       //Findign user Log
       const userLog = await User.findOne({
-        where: { id: dataUserLog.Id },
+        where: { id: dataUserLog.id },
         relations: ["books"],
       });
 
@@ -160,8 +162,7 @@ export class BookResolver {
 
       //Update book with new user owner
       const dateNow: any = new Date();
-      const dateEnd: any = dateNow.getDate() + Number(environment.DAY_LOAN);
-      
+      const dateEnd: any = addDaysToDate(dateNow, Number(environment.DAY_LOAN));
 
       const result = await Book.update(input.id, {
         isOnLoan: true,
@@ -182,6 +183,7 @@ export class BookResolver {
     }
   }
 
+  //////////// QUERY GET ALL BOOK WITH JWT ////////////
   @Query(() => [Book])
   @UseMiddleware(isAuth)
   async getAllBooks(): Promise<Book[] | undefined> {
