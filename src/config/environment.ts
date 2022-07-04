@@ -13,4 +13,7 @@ export const environment = {
 
   EMAIL_TEST: process.env.EMAIL_TEST,
   Email_TEST_PASS: process.env.Email_TEST_PASS,
+
+  DAY_LOAN :process.env.DAY_LOAN,
+  BOOKS_LOAN : process.env.BOOKS_LOAN,
 };

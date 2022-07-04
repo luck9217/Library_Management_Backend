@@ -66,7 +66,7 @@ export class AuthorResolver {
 
   @Query(() => [Author])
   async GetAllAuthor(): Promise<Author[]> {
-    const result = await Author.find({relations:['books']});
+    const result= await Author.find({relations:['books']});
 
     console.log(result);
 

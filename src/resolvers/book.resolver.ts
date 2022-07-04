@@ -9,8 +9,10 @@ import {
   Resolver,
   UseMiddleware,
 } from "type-graphql";
+import { environment } from "../config/environment";
 import { Author } from "../entity/author.entity";
 import { Book } from "../entity/book.entity";
+import { User } from "../entity/user.entity";
 import { isAuth, TContext } from "../middlewares/auth.middleware";
 
 @InputType()
@@ -50,6 +52,7 @@ class BookUpdateParsedInput {
 
 @Resolver()
 export class BookResolver {
+  //////////////// CREATE NEW BOOK WITH JWT /////////////////////////
   @Mutation(() => Book)
   @UseMiddleware(isAuth)
   async createBook(
@@ -57,7 +60,7 @@ export class BookResolver {
     @Ctx() context: TContext
   ) {
     try {
-      console.log("result jwt",context.payload);
+      console.log("result jwt", context.payload);
       const author = await Author.findOne({ where: [{ id: input.author }] });
 
       if (!author) {
@@ -77,6 +80,103 @@ export class BookResolver {
       console.log(result);
 
       return result;
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
+
+  //////////////QUERY ALL BOOK AVAILABLE WITH JWT //////////////////
+  @Query(() => [Book])
+  @UseMiddleware(isAuth)
+  async getAllBooksAvailable(): Promise<Book[] | undefined> {
+    const result = await Book.find({
+      relations: ["author", "author.books"],
+      where: { isOnLoan: false },
+    });
+    console.log(result);
+    return result;
+  }
+
+  //////////////QUERY ALL BOOK NOT AVAILABLE WITH JWT //////////////////
+  @Query(() => [Book])
+  @UseMiddleware(isAuth)
+  async getDateOnLean(): Promise<Book[] | undefined> {
+    const result = await Book.find({
+      relations: ["author", "author.books"],
+      where: { isOnLoan: true },
+    });
+    console.log(result);
+    return result;
+  }
+
+  ////////////// MUTATION TAKE NEW BOOK AVAILABLE ///////////
+  @Mutation(() => Book)
+  @UseMiddleware(isAuth)
+  async userOnleanBook(
+    @Arg("input", () => BookIdInput) input: BookIdInput,
+    @Ctx() context: TContext
+  ) {
+    try {
+      //Finding book
+      const bookSelected = await Book.findOne({ where: { id: input.id } });
+
+      if (!bookSelected) {
+        const error = new Error();
+        error.message = "The Book does not exist, please double check";
+        throw error;
+      }
+
+      //Cheking available
+      if (bookSelected.isOnLoan === true) {
+        const error = new Error();
+        error.message = "The Book does not available";
+        throw error;
+      }
+
+      const dataUserLog: any = context.payload;
+
+      //Findign user Log
+      const userLog = await User.findOne({
+        where: { id: dataUserLog.Id },
+        relations: ["books"],
+      });
+
+      if (!userLog) {
+        const error = new Error();
+        error.message = "The User does not exist, please double check";
+        throw error;
+      }
+
+      //checking amount of books loaned
+      if (userLog.books.length >= Number(environment.BOOKS_LOAN)) {
+        const error = new Error();
+        error.message = "The User is overload to books, please book back";
+        throw error;
+      }
+
+      //Mark bookLoan on user selected
+      const resultUpdate = await User.update(userLog.id, { bookLoan: true });
+      console.log(resultUpdate);
+
+      //Update book with new user owner
+      const dateNow: any = new Date();
+      const dateEnd: any = dateNow.getDate() + Number(environment.DAY_LOAN);
+      
+
+      const result = await Book.update(input.id, {
+        isOnLoan: true,
+        userOwner: userLog,
+        DateLoan: dateNow,
+        DateBackLoan: dateEnd,
+      });
+
+      if (result.affected === 0) {
+        const error = new Error();
+        error.message = "Something wrong to upload";
+        throw error;
+      }
+
+      return bookSelected;
     } catch (e: any) {
       throw new Error(e.message);
     }

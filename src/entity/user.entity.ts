@@ -29,14 +29,14 @@ export class User extends BaseEntity {
   password!: string;
 
   @Field(() => [Book], { nullable: true })
-  @OneToMany(() => Book, (book) => book.author, {
+  @OneToMany(() => Book, (book) => book.userOwner, {
     nullable: true,
     onDelete: "CASCADE",
   })
   books!: Book[];
 
   @Field()
-  @Column()
+  @Column({ default: false })
   bookLoan!: boolean;
 
   @Field()

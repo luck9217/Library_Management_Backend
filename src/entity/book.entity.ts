@@ -26,19 +26,19 @@ export class Book extends BaseEntity {
   author!: Author;
 
   @Field()
-  @Column()
-  isOnLoan!: boolean;
+  @Column({ default: false })
+  isOnLoan: boolean;
 
   @Field(() => User)
   @ManyToOne(() => User, (user) => user.books, { onDelete: "CASCADE" })
   userOwner!: User;
 
   @Field()
-  @Column()
+  @Column({nullable: true  })
   DateLoan!: string;
 
   @Field()
-  @Column()
+  @Column({ nullable: true })
   DateBackLoan!: string;
 
   @Field()

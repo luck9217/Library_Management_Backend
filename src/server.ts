@@ -14,7 +14,7 @@ export async function startServer() {
     schema: await buildSchema({
       resolvers: [BookResolver, AuthorResolver, AuthResolver],
     }),
-    context: ({ req, res }:any) => ({ req, res }),
+    context: ({ req, res }: any) => ({ req, res }),
   });
   //solve problem with packed apollo server and calling listen
   await apolloServer.start();

@@ -11,8 +11,7 @@ export interface TContext {
 
 export const isAuth: MiddlewareFn<TContext> = ({ context }, next) => {
   try {
-   const bearerToken = context.req.headers["authorization"];
-    
+    const bearerToken = context.req.headers["authorization"];
 
     if (!bearerToken) {
       console.log(bearerToken);
@@ -20,13 +19,11 @@ export const isAuth: MiddlewareFn<TContext> = ({ context }, next) => {
     }
 
     const jwt = bearerToken.split(" ")[1];
-    console.log(jwt);
-    console.log( environment.JWT_SECRET);
 
     const payload = verify(jwt, environment.JWT_SECRET);
     context.payload = payload as any;
 
-    console.log(payload);
+    console.log("message after jwr validation",payload);
   } catch (e: any) {
     console.log(e.message);
     throw new Error(e);
