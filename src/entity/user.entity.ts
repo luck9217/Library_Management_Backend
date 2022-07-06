@@ -29,10 +29,7 @@ export class User extends BaseEntity {
   password!: string;
 
   @Field(() => [Book], { nullable: true })
-  @OneToMany(() => Book, (book) => book.userOwner, {
-    nullable: true,
-    onDelete: "CASCADE",
-  })
+  @OneToMany(() => Book, book => book.userOwner, { nullable: true , onDelete: 'CASCADE'})
   books!: Book[];
 
   @Field()
@@ -43,3 +40,5 @@ export class User extends BaseEntity {
   @CreateDateColumn({ type: "timestamp" })
   createdAt!: string;
 }
+
+
