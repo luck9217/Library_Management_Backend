@@ -2,6 +2,7 @@ import { Between, LessThan, Like, MoreThan } from "typeorm";
 import { Author } from "../../entity/author.entity";
 import { Book } from "../../entity/book.entity";
 import { User } from "../../entity/user.entity";
+import { getTemplateRecordatory, sendEmail } from "./mail.config";
 
 export const userRecordatory = async () => {
   try {
@@ -48,19 +49,25 @@ export const userRecordatory = async () => {
     });
 
     //show data resume
-    UsersInfraction.forEach((dataUser) => {
-      console.log("User: ", dataUser.fullName, " | Email: ", dataUser.email);
-      dataUser.books.forEach((book) => {
-        console.log(
-          book.title,
-          " book of ",
-          listAuthor[listIdBookAuthor[book.id]]
-        );
+    UsersInfraction.forEach(async(dataUser) => {
+      const bookInfo: any = [];
+
+      dataUser.books.forEach((book, index) => {
+        bookInfo.push( `${book.title} book of ${
+            listAuthor[listIdBookAuthor[book.id]]
+          }`);
       });
+
+      //Sending Email to each user
+      const bodyTemplate = getTemplateRecordatory(dataUser.fullName, bookInfo);
+
+     await sendEmail(dataUser.email, "Books on Loan out of Date", bodyTemplate);
+
+
     });
   } catch (error) {
     console.log(error);
   }
 
-  return console.log("Hello World");
+  return console.log("Sent Recordatory");
 };
