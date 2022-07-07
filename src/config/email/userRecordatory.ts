@@ -49,21 +49,23 @@ export const userRecordatory = async () => {
     });
 
     //show data resume
-    UsersInfraction.forEach(async(dataUser) => {
-      const bookInfo: any = [];
+    UsersInfraction.forEach(async (dataUser) => {
+      let bookInfo = "";
 
       dataUser.books.forEach((book, index) => {
-        bookInfo.push( `${book.title} book of ${
-            listAuthor[listIdBookAuthor[book.id]]
-          }`);
+        bookInfo += `<li>${book.title} book of ${
+          listAuthor[listIdBookAuthor[book.id]]
+        }</li>`;
       });
 
       //Sending Email to each user
       const bodyTemplate = getTemplateRecordatory(dataUser.fullName, bookInfo);
 
-     await sendEmail(dataUser.email, "Books on Loan out of Date", bodyTemplate);
-
-
+      await sendEmail(
+        dataUser.email,
+        "Books on Loan out of Date",
+        bodyTemplate
+      );
     });
   } catch (error) {
     console.log(error);

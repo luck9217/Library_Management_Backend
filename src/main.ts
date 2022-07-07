@@ -26,7 +26,7 @@ async function main() {
   // cron.schedule(`* * * * * * *`, async () => {
   //   //cron.schedule(`0 0 0 15 * * 1`, () => {
   //   console.log("running a task every minute");
-    //await userRecordatory();     ok
+    await userRecordatory();    /// ok
   // });
 
   console.log("END");
