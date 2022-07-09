@@ -52,7 +52,7 @@ export const userRecordatory = async () => {
     UsersInfraction.forEach(async (dataUser) => {
       let bookInfo = "";
 
-      dataUser.books.forEach((book, index) => {
+      dataUser.books.forEach((book) => {
         bookInfo += `<li>${book.title} book of ${
           listAuthor[listIdBookAuthor[book.id]]
         }</li>`;
