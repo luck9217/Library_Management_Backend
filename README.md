@@ -10,3 +10,5 @@ Query and Mutation with authentication with JWT on header.
 
 Pre Register with Email confirmation (nodemailer) and password security with bcryptjs
 
+Repors every week automatically to email on table format
+
