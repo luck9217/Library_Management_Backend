@@ -32,6 +32,7 @@ export class Book extends BaseEntity {
   @Field(() => User)
   @ManyToOne(() => User, (userOwner) => userOwner.books, {
     onDelete: "CASCADE",
+    nullable: true,
   })
   userOwner!: User;
 

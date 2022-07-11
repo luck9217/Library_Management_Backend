@@ -40,6 +40,7 @@ class AuthorUpdateInput {
 @Resolver()
 export class AuthorResolver {
   @Mutation(() => Author)
+  @UseMiddleware(isAuth)
   async createAuthor(
     @Arg("input", () => AuthorInput) input: AuthorInput
   ): Promise<Author | undefined> {
@@ -57,6 +58,7 @@ export class AuthorResolver {
   }
 
   @Query(() => [Author]) // @Field on entity to traslate to field query // [] with bracket i especified an array like response
+  @UseMiddleware(isAuth)
   async GetAllAuthorMore10(): Promise<Author[]> {
     //const result = Author.find({ where: [{ id: 5 }] });
     // const result = Author.find({
@@ -99,6 +101,7 @@ export class AuthorResolver {
   }
 
   @Mutation(() => Author)
+  @UseMiddleware(isAuth)
   async updateOneAuthor(
     @Arg("input", () => AuthorUpdateInput) input: AuthorUpdateInput
   ) {
@@ -126,6 +129,7 @@ export class AuthorResolver {
   }
 
   @Mutation(() => Boolean) // @Field on entity to traslate to field query // [] with bracket i especified an array like response
+  @UseMiddleware(isAuth)
   async DeleteAuthorId(
     @Arg("input", () => AuthorIdInput) input: AuthorIdInput //: Promise<Author[]>
   ) {

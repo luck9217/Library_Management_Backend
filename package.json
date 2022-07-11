@@ -24,9 +24,7 @@
     "reflect-metadata": "^0.1.13",
     "type-graphql": "^1.1.1",
     "typeorm": "^0.3.6",
-    "uuid": "^8.3.2",
-    "uuidv4": "^6.2.13",
-    "xlsx": "^0.18.5"
+    "uuidv4": "^6.2.13"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",

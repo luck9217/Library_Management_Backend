@@ -25,6 +25,10 @@ export const userRecordatory = async () => {
       },
     });
 
+    if (!UsersInfraction) {
+      throw new Error("Nobody to send");
+    }
+
     //create list of author with id
     const authorId = await Author.find({
       select: { id: true, fullName: true },

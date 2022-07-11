@@ -5,12 +5,14 @@ import {
   Field,
   InputType,
   Mutation,
+  ObjectType,
   Query,
   Resolver,
   UseMiddleware,
 } from "type-graphql";
 import { addDaysToDate } from "../config/dateConvert/dateConvert";
 import { environment } from "../config/environment";
+import { AppDataSource } from "../config/typeorm";
 import { Author } from "../entity/author.entity";
 import { Book } from "../entity/book.entity";
 import { User } from "../entity/user.entity";
@@ -49,6 +51,12 @@ class BookUpdateParsedInput {
 
   @Field(() => Author, { nullable: true })
   author?: Author;
+}
+
+@ObjectType()
+class MessageOfAdmin {
+  @Field()
+  msg!: string;
 }
 
 @Resolver()
@@ -191,8 +199,118 @@ export class BookResolver {
     console.log(result);
     return result;
   }
+  ////// MUTATION TO BOOK BACK FROM USER ////////
+  @Mutation(() => MessageOfAdmin)
+  @UseMiddleware(isAuth)
+  async userBackBook(
+    @Arg("input", () => BookIdInput) input: BookIdInput,
+    @Ctx() context: TContext
+  ) {
+    try {
+      const dataUserLog: any = context.payload;
+      console.log("The user log is ", dataUserLog.id);
+
+      //Findign user Log
+      const userLog = await User.findOne({
+        where: { id: dataUserLog.id },
+        relations: ["books"],
+      });
+
+      if (!userLog) {
+        return { msg: "The User does not exist, please double check" };
+      }
+
+      //Finding book
+      const bookSelected = await Book.findOne({
+        where: { id: input.id },
+      });
+
+      if (!bookSelected) {
+        return { msg: "The Book does not exist, please double check" };
+      }
+
+      //Finding book
+      const bookIdUser = await Book.findOne({
+        where: {
+          id: input.id,
+          isOnLoan: true,
+          userOwner: { id: dataUserLog.id },
+        },
+        relations: { userOwner: true },
+      });
+
+      if (!bookIdUser) {
+        return {
+          msg: "The Book does not assigned to you, please double check",
+        };
+      }
+
+      const dateNow: any = new Date().toISOString();
+
+      let msgAdmin = "";
+
+      if (bookIdUser.DateBackLoan >= dateNow) {
+        msgAdmin = "Thanks for return the book on time, welcome soon";
+      } else {
+        msgAdmin = "Your back date is expirate, you must to pay infraction";
+      }
+
+      //Restore values from id Book, user id and dates
+      const resultUpdate = await AppDataSource.createQueryBuilder()
+        .update("book")
+        .set({
+          isOnLoan: false,
+          userOwner: null,
+          DateLoan: null,
+          DateBackLoan: null,
+        })
+        .where("id =:id", { id: bookIdUser.id })
+        .execute();
+
+      if (resultUpdate.affected === 0) {
+        const error = new Error();
+        error.message = "Something wrong to upload";
+        throw error;
+      }
+
+      // //Findign user Log
+      const userLogCheck = await User.findOne({
+        where: { id: dataUserLog.id },
+        relations: ["books"],
+      });
+
+      if (!userLogCheck) {
+        const error = new Error();
+        error.message = "Something wrong";
+        throw error;
+      }
+
+      //Check books of User selected and clear boolean check if not match
+      let amountBooks = 0;
+
+      userLogCheck.books.map(() => {
+        amountBooks += 1;
+      });
+      if (amountBooks === 0) {
+        const clearIsloanUs = await User.update(dataUserLog.id, {
+          bookLoan: false,
+        });
+
+        if (clearIsloanUs.affected === 0) {
+          const error = new Error();
+          error.message = "Something wrong to upload";
+          throw error;
+        }
+      }
+
+      return { msg: msgAdmin };
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  }
 
   @Query(() => Book)
+  @UseMiddleware(isAuth)
   async getBookById(
     @Arg("input", () => BookIdInput) input: BookIdInput // : Promise<Book | undefined>
   ): Promise<Book | undefined> {
@@ -221,6 +339,7 @@ export class BookResolver {
   }
 
   @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
   async updateBookById(
     @Arg("bookId", () => BookIdInput) bookId: BookIdInput,
     @Arg("input", () => BookUpdateInput) input: BookUpdateInput
@@ -257,6 +376,7 @@ export class BookResolver {
   }
 
   @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
   async deleteBook(
     @Arg("bookId", () => BookIdInput) bookId: BookIdInput //: Promise<Boolean>
   ) {

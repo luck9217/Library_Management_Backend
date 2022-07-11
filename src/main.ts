@@ -4,7 +4,7 @@ import userRoutes from "./routers/user.routes";
 import express from "express";
 import { environment } from "./config/environment";
 import { userRecordatory } from "./config/email/userRecordatory";
-import { buildInfo } from "./config/admincontrol/reportadmin";
+import { sendReportAdmin } from "./config/admincontrol/reportadmin";
 var cron = require("node-cron");
 
 async function main() {
@@ -23,12 +23,15 @@ async function main() {
   app.use(userRoutes);
   console.log("Router running");
 
+  //Scheduled Tasks Every Monday at 15hs
   // cron.schedule(`* * * * * * *`, async () => {
-  //   //cron.schedule(`0 0 0 15 * * 1`, () => {
-  //   console.log("running a task every minute");
-  //await userRecordatory();    /// ok
-  // });
-  buildInfo();
+  cron.schedule(`0 0 0 15 * * 1`, async () => {
+    console.log("running a task every minute");
+    //Send Recordatory Each user that doesn book back
+    await userRecordatory();
+    //Send to Admin all books pending
+    await sendReportAdmin();
+  });
 
   console.log("END");
 }
